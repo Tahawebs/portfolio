@@ -88,6 +88,38 @@ const Store = (function () {
 
   let data = load();
 
+  // Migrate/sanitize any saved LinkedIn URL so it won't become a relative link
+  (function sanitizeSavedLinkedIn() {
+    try {
+      const prof = data && data.profile;
+      if (!prof || !prof.contact) return;
+      const raw = (prof.contact.linkedin || '').trim();
+      if (!raw) return;
+      let li = raw;
+      if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(li)) {
+        li = li.replace(/^\/+/, '');
+        li = `https://${li}`;
+      }
+      try {
+        const u = new URL(li);
+        // enforce www subdomain for LinkedIn
+        if (/linkedin\.com$/i.test(u.hostname) || /(^|\.)linkedin\.com$/i.test(u.hostname)) {
+          u.hostname = 'www.linkedin.com';
+          // update stored value
+          prof.contact.linkedin = u.toString();
+          // persist the sanitized data
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+      } catch (e) {
+        // fallback: prefix and persist
+        prof.contact.linkedin = `https://www.linkedin.com/in/${encodeURIComponent(raw.replace(/^https?:\/\//i, '').replace(/^www\./i, ''))}`;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+    } catch (e) {
+      // noop
+    }
+  })();
+
   function persist() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     window.dispatchEvent(new CustomEvent(EVENT, { detail: data }));

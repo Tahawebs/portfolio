@@ -151,7 +151,30 @@
     const phoneA = document.getElementById('contact-phone');
     phoneA.href = `tel:${profile.contact.phone}`;
     const liA = document.getElementById('contact-linkedin');
-    liA.href = profile.contact.linkedin;
+    // Normalize LinkedIn URL so missing protocol doesn't create a relative link
+    (function () {
+      let liUrl = (profile.contact.linkedin || '').trim();
+      if (!liUrl) { liA.href = '#'; return; }
+      if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(liUrl)) {
+        liUrl = liUrl.replace(/^\/+/, '');
+        liUrl = `https://${liUrl}`;
+      }
+      try {
+        const u = new URL(liUrl);
+        if (/linkedin\.com$/i.test(u.hostname) || /(^|\.)linkedin\.com$/i.test(u.hostname)) {
+          u.hostname = 'www.linkedin.com';
+          // If path doesn't start with /in/ or /pub/ but looks like a username, ensure /in/
+          if (!/^\/(in|pub)\//.test(u.pathname) && u.pathname !== '/') {
+            u.pathname = u.pathname.replace(/^\//, '');
+            u.pathname = '/in/' + u.pathname;
+          }
+        }
+        liA.href = u.toString();
+      } catch (e) {
+        // fallback
+        liA.href = `https://www.linkedin.com/in/${encodeURIComponent(liUrl.replace(/^https?:\/\//i, '').replace(/^www\./i, ''))}`;
+      }
+    })();
 
     // email/phone/linkedin text stays static ("Email me" / "Call" / "LinkedIn"),
     // but the underlying address is editable via the admin bar's Export/Import
@@ -174,7 +197,7 @@
         if (!AdminUI.isEditMode()) return;
         e.preventDefault();
         const v = prompt('LinkedIn URL:', profile.contact.linkedin);
-        if (v) { profile.contact.linkedin = v; Store.save(); }
+        if (v) { profile.contact.linkedin = v.trim(); Store.save(); }
       };
     } else {
       emailA.onclick = null; phoneA.onclick = null; liA.onclick = null;
