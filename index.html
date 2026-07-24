@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Muhammad Taha — Backend Developer</title>
+<meta name="description" content="Muhammad Taha — Backend Developer specializing in C# and the .NET ecosystem. Portfolio of production and personal projects.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%226%22 fill=%22%234338CA%22/><text x=%2212%22 y=%2216.5%22 font-family=%22monospace%22 font-size=%2211%22 fill=%22white%22 text-anchor=%22middle%22>MT</text></svg>">
+<link rel="stylesheet" href="css/styles.css">
+<script>
+  // set theme before paint to avoid flash
+  (function(){ var t = localStorage.getItem('mt-portfolio-theme'); if(!t){ t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light'; } document.documentElement.setAttribute('data-theme', t); })();
+</script>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <button type="button" class="logo" id="brand-btn" aria-label="View profile"><span class="logo-mark" id="brand-mark">MT</span><span id="brand-name">Muhammad Taha</span></button>
+    <ul class="nav-links" data-nav-links>
+      <li><a href="#about">About</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="theme-toggle" data-theme-toggle aria-label="Toggle color theme">
+        <span class="icon-moon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg></span>
+        <span class="icon-sun"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"/></svg></span>
+      </button>
+      <button class="nav-toggle" data-nav-toggle aria-label="Toggle navigation menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7h16"/>
+          <path d="M4 12h16"/>
+          <path d="M4 17h16"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="grid-backdrop"></div>
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-kicker"><span class="dot"></span> <span id="hero-kicker"></span></div>
+        <h1><span id="hero-title-pre"></span><span class="accent" id="hero-title-accent"></span><span id="hero-title-post"></span></h1>
+        <div class="hero-role" id="hero-role"></div>
+        <p class="hero-desc" id="hero-desc"></p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#projects">View projects</a>
+          <a class="btn btn-ghost" href="#contact">Get in touch</a>
+        </div>
+        <div class="hero-stats" id="hero-stats"></div>
+      </div>
+
+      <div class="manifest">
+        <div class="manifest-bar">
+          <span style="background:#E8654E"></span><span style="background:#F5B942"></span><span style="background:#2DD9C6"></span>
+          <span class="name">stack.json</span>
+        </div>
+        <div class="manifest-body">
+<div class="row"><span class="ln">1</span><span class="p">{</span></div>
+<div class="row"><span class="ln">2</span>  <span class="k">"developer"</span><span class="p">:</span> <span class="s">"Muhammad Taha"</span><span class="p">,</span></div>
+<div class="row"><span class="ln">3</span>  <span class="k">"focus"</span><span class="p">:</span> <span class="s">"Backend Development"</span><span class="p">,</span></div>
+<div class="row"><span class="ln">4</span>  <span class="k">"language"</span><span class="p">:</span> <span class="s">"C#"</span><span class="p">,</span></div>
+<div class="row"><span class="ln">5</span>  <span class="k">"framework"</span><span class="p">:</span> <span class="p">[</span><span class="s">".NET Core"</span><span class="p">,</span> <span class="s">"ASP.NET Core MVC"</span><span class="p">],</span></div>
+<div class="row"><span class="ln">6</span>  <span class="k">"dataAccess"</span><span class="p">:</span> <span class="p">[</span><span class="s">"ADO.NET"</span><span class="p">,</span> <span class="s">"EF Core"</span><span class="p">,</span> <span class="s">"Dapper"</span><span class="p">],</span></div>
+<div class="row"><span class="ln">7</span>  <span class="k">"database"</span><span class="p">:</span> <span class="s">"SQL Server"</span><span class="p">,</span></div>
+<div class="row"><span class="ln">8</span>  <span class="k">"status"</span><span class="p">:</span> <span class="s">"compiling career..."</span></div>
+<div class="row"><span class="ln">9</span><span class="p">}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div>
+        <div class="eyebrow">// about</div>
+        <h2 class="section-title" id="about-title"></h2>
+        <div class="about-copy" id="about-copy" style="margin-top:22px;"></div>
+      </div>
+      <div class="timeline reveal" id="about-timeline"></div>
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">// skills</div>
+      <h2 class="section-title">Technical skills</h2>
+      <p class="section-sub" id="skills-subtitle"></p>
+    </div>
+
+    <div class="skills-grid" id="skills-grid"></div>
+
+    <div class="tool-pills reveal" id="skills-pills"></div>
+  </div>
+</section>
+
+<section id="projects">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">// projects</div>
+      <h2 class="section-title">Featured projects</h2>
+      <p class="section-sub">Each project opens onto its own page — process, decisions and a media gallery included. Click through for the full build.</p>
+    </div>
+    <div class="projects-grid" id="projects-grid"></div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="container">
+    <div class="contact-box reveal">
+      <div class="eyebrow" style="justify-content:center;">// contact</div>
+      <h2 id="contact-title"></h2>
+      <p id="contact-desc"></p>
+      <div class="contact-links">
+        <a class="btn btn-primary" id="contact-email" href="#">Email me</a>
+        <a class="btn btn-ghost" id="contact-phone" href="#">Call</a>
+        <a class="btn btn-ghost" id="contact-linkedin" href="#" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container footer-inner">
+    <span>© <span id="year"></span> Muhammad Taha</span>
+    <span>Built with C# on the mind, HTML in the hands.</span>
+  </div>
+</footer>
+
+<script src="js/icons.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/projects-data.js"></script>
+<script src="js/site-data.js"></script>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/github-publish.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/site-render.js"></script>
+<script src="js/main.js"></script>
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
