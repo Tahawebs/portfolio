@@ -29,7 +29,16 @@ portfolio/
     └── projects/             Put your real screenshots & videos here
 ```
 
+## Admin / owner mode
 
+There is no visible login link anywhere on the site. To open it:
+
+- type **admin** anywhere on the page (no need to click into a field), or
+- press **Ctrl+Alt+L**
+
+Default sign-in: username `ataha`, password `0126`. **Change this from the
+admin bar ("Change login") the first time you sign in** — it's stored as a
+SHA-256 hash in this browser's `localStorage`, never in plain text.
 
 Once signed in, an admin bar appears bottom-right. Flip on **Edit mode** and
 you can click straight into almost any text on the site (hero copy, about

@@ -121,8 +121,14 @@ const Store = (function () {
   })();
 
   function persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.warn('Store: save failed — the browser storage quota was likely exceeded.', e);
+      return false;
+    }
     window.dispatchEvent(new CustomEvent(EVENT, { detail: data }));
+    return true;
   }
 
   return {
@@ -133,15 +139,17 @@ const Store = (function () {
     getProjects() { return data.projects; },
 
     // Call after mutating the object returned by getData()/getProfile()/etc.
-    save() { persist(); },
+    // Returns true if the change was actually saved, false if the browser's
+    // storage was full (e.g. a very large video).
+    save() { return persist(); },
 
-    setProjects(next) { data.projects = next; persist(); },
-    setProfile(next) { data.profile = next; persist(); },
-    setSkills(next) { data.skills = next; persist(); },
+    setProjects(next) { data.projects = next; return persist(); },
+    setProfile(next) { data.profile = next; return persist(); },
+    setSkills(next) { data.skills = next; return persist(); },
 
     resetToDefaults() {
       data = defaults();
-      persist();
+      return persist();
     },
 
     exportJSON() {
@@ -161,7 +169,7 @@ const Store = (function () {
         throw new Error('That file doesn\'t look like a portfolio-data.json export.');
       }
       data = normalizeData(obj);
-      persist();
+      return persist();
     }
   };
 })();

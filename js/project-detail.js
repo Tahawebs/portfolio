@@ -275,12 +275,20 @@
             input.addEventListener('change', () => {
               const file = input.files[0];
               if (!file) return;
-              if (file.size > 15 * 1024 * 1024) {
-                AdminUI.toast('That video is over 15MB — too large to store in the browser. Paste a hosted video URL instead.', true);
+              if (file.size > 100 * 1024 * 1024) {
+                AdminUI.toast('That video is over 100MB — too large to store in the browser. Paste a hosted video URL instead.', true);
                 return;
               }
               const reader = new FileReader();
-              reader.onload = () => { mediaItem.src = reader.result; Store.save(); };
+              reader.onload = () => {
+                const previousSrc = mediaItem.src;
+                mediaItem.src = reader.result;
+                const saved = Store.save();
+                if (!saved) {
+                  mediaItem.src = previousSrc;
+                  AdminUI.toast("This browser's storage is full, so that video couldn't be saved — try a smaller file or paste a hosted video URL instead.", true);
+                }
+              };
               reader.readAsDataURL(file);
             });
             input.click();
