@@ -3,10 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Force every visit to re-fetch this page and its assets instead of
+     showing a stale cached copy after edits are published. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Project — Muhammad Taha</title>
 <meta name="description" content="Project detail — Muhammad Taha, Backend Developer.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%226%22 fill=%22%234338CA%22/><text x=%2212%22 y=%2216.5%22 font-family=%22monospace%22 font-size=%2211%22 fill=%22white%22 text-anchor=%22middle%22>MT</text></svg>">
-<link rel="stylesheet" href="css/styles.css">
+<script>
+  // A fresh value every single page load — appending it to every asset
+  // URL below makes each one a "new" URL to the browser, so it always
+  // hits the network instead of serving a stale cached copy.
+  window.MT_CACHE_BUST = Date.now();
+  document.write('<link rel="stylesheet" href="css/styles.css?v=' + window.MT_CACHE_BUST + '">');
+</script>
 <script>
   (function(){ var t = localStorage.getItem('mt-portfolio-theme'); if(!t){ t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light'; } document.documentElement.setAttribute('data-theme', t); })();
 </script>
@@ -47,15 +58,11 @@
   </div>
 </footer>
 
-<script src="js/icons.js"></script>
-<script src="js/theme.js"></script>
-<script src="js/projects-data.js"></script>
-<script src="js/site-data.js"></script>
-<script src="js/store.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/github-publish.js"></script>
-<script src="js/admin.js"></script>
-<script src="js/project-detail.js"></script>
+<script>
+  ['icons','theme','projects-data','site-data','store','media-store','auth','github-publish','admin','lightbox','project-detail'].forEach(function (name) {
+    document.write('<script src="js/' + name + '.js?v=' + window.MT_CACHE_BUST + '"><' + '/script>');
+  });
+</script>
 <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
 </html>

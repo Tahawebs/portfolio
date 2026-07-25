@@ -9,6 +9,21 @@
     return new URLSearchParams(window.location.search).get(name);
   }
 
+  // Detects a YouTube/Vimeo share link and returns an embeddable player URL.
+  // Pasting a normal "watch" link (not a direct .mp4) is the #1 reason a
+  // pasted video URL used to just show a broken video box — this makes
+  // those links play inline instead of failing silently.
+  function videoEmbedInfo(url) {
+    if (!url || typeof url !== 'string' || /^idb:/.test(url)) return null;
+    let m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{6,})/i);
+    if (m) return { provider: 'youtube', embedUrl: `https://www.youtube-nocookie.com/embed/${m[1]}` };
+    m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+    if (m) return { provider: 'vimeo', embedUrl: `https://player.vimeo.com/video/${m[1]}` };
+    return null;
+  }
+
+  function isIdbRef(src) { return typeof src === 'string' && src.startsWith('idb:'); }
+
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -43,14 +58,40 @@
   function mediaSlideHtml(item, project, sIdx, mIdx) {
     const label = item.label || '';
     const attrs = `data-s="${sIdx}" data-m="${mIdx}"`;
+
+    // A YouTube/Vimeo link, whatever the stored "type" flag says — always
+    // wins, since it can only ever be played as an embed.
+    const embed = item.src ? videoEmbedInfo(item.src) : null;
+    if (embed) {
+      return `
+        <div class="carousel-slide" ${attrs} data-label="${escapeHtml(label)}" data-embed="1">
+          <div class="video-embed-wrap">
+            <iframe src="${embed.embedUrl}" title="${escapeHtml(label || project.title)}" loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          </div>
+        </div>`;
+    }
+
     if (item.type === 'video') {
+      if (isIdbRef(item.src)) {
+        const refId = item.src.slice(4);
+        return `
+          <div class="carousel-slide" ${attrs} data-label="${escapeHtml(label)}">
+            <video playsinline preload="metadata" data-idb-ref="${escapeHtml(refId)}" ${item.poster ? `poster="${item.poster}"` : ''}>
+              Your browser doesn't support embedded video.
+            </video>
+            <span class="carousel-play-badge">${icon('play')}</span>
+          </div>`;
+      }
       if (item.src) {
         return `
-          <div class="carousel-slide" ${attrs}>
-            <video controls playsinline preload="metadata" ${item.poster ? `poster="${item.poster}"` : ''}>
+          <div class="carousel-slide" ${attrs} data-label="${escapeHtml(label)}">
+            <video playsinline preload="metadata" ${item.poster ? `poster="${item.poster}"` : ''}>
               <source src="${item.src}">
               Your browser doesn't support embedded video. <a href="${item.src}">Download it here.</a>
             </video>
+            <span class="carousel-play-badge">${icon('play')}</span>
           </div>`;
       }
       return `
@@ -60,9 +101,34 @@
     }
     const src = item.src || placeholderDataUri(label || 'Image placeholder', project.color);
     return `
-      <div class="carousel-slide" ${attrs} ${item.src ? '' : 'data-empty="1"'}>
+      <div class="carousel-slide" ${attrs} ${item.src ? `data-label="${escapeHtml(label)}"` : 'data-empty="1"'}>
         <img src="${src}" alt="${escapeHtml(label || project.title)}" loading="lazy">
       </div>`;
+  }
+
+  // Locally-uploaded videos are stored as Blobs in IndexedDB (see
+  // media-store.js) and only referenced by id in the page data, so after
+  // the HTML above is inserted we still need to fetch each blob and wire
+  // it up as a playable <source>. Runs once per render, before carousels
+  // and the lightbox are initialized so both see the real, playable src.
+  async function resolveIdbMedia(root) {
+    const videos = Array.from(root.querySelectorAll('video[data-idb-ref]'));
+    if (!videos.length) return;
+    await Promise.all(videos.map(async (video) => {
+      const id = video.dataset.idbRef;
+      try {
+        if (!MediaStore || !MediaStore.isSupported()) throw new Error('IndexedDB unsupported');
+        const url = await MediaStore.resolveUrl(id);
+        if (!url) throw new Error('Video not found in storage');
+        const source = document.createElement('source');
+        source.src = url;
+        video.insertBefore(source, video.firstChild);
+        video.load();
+      } catch (e) {
+        const slide = video.closest('.carousel-slide');
+        if (slide) slide.classList.add('media-missing');
+      }
+    }));
   }
 
   function carouselHtml(sectionIdx, media, project) {
@@ -145,6 +211,29 @@
         const dx = e.changedTouches[0].clientX - startX;
         if (Math.abs(dx) > 40) go(dx > 0 ? index - 1 : index + 1);
         startX = null;
+      });
+
+      // ----- lightbox: click any real (non-placeholder, non-embed) slide to open it big -----
+      // Embeds (YouTube/Vimeo) keep their own inline controls instead —
+      // wrapping them in a click-to-open handler would just get in the way.
+      const viewableSlides = Array.from(slides).filter((s) => s.dataset.empty !== '1' && s.dataset.embed !== '1');
+      const lightboxItems = viewableSlides.map((s) => {
+        const videoEl = s.querySelector('video');
+        if (videoEl) {
+          const source = videoEl.querySelector('source');
+          return {
+            type: 'video',
+            src: (source && source.getAttribute('src')) || '',
+            poster: videoEl.getAttribute('poster') || '',
+            label: s.dataset.label || ''
+          };
+        }
+        const imgEl = s.querySelector('img');
+        return { type: 'image', src: (imgEl && imgEl.getAttribute('src')) || '', label: s.dataset.label || '' };
+      });
+      viewableSlides.forEach((slideEl, i) => {
+        slideEl.classList.add('carousel-slide-clickable');
+        slideEl.addEventListener('click', () => Lightbox.open(lightboxItems, i));
       });
     });
   }
@@ -272,24 +361,29 @@
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'video/*';
-            input.addEventListener('change', () => {
+            input.addEventListener('change', async () => {
               const file = input.files[0];
               if (!file) return;
               if (file.size > 100 * 1024 * 1024) {
-                AdminUI.toast('That video is over 100MB — too large to store in the browser. Paste a hosted video URL instead.', true);
+                AdminUI.toast('That video is over 100MB — pick a smaller file, or paste a hosted URL (YouTube, Vimeo, or a direct video link) instead.', true);
                 return;
               }
-              const reader = new FileReader();
-              reader.onload = () => {
-                const previousSrc = mediaItem.src;
-                mediaItem.src = reader.result;
-                const saved = Store.save();
-                if (!saved) {
-                  mediaItem.src = previousSrc;
-                  AdminUI.toast("This browser's storage is full, so that video couldn't be saved — try a smaller file or paste a hosted video URL instead.", true);
-                }
-              };
-              reader.readAsDataURL(file);
+              if (!MediaStore || !MediaStore.isSupported()) {
+                AdminUI.toast("This browser doesn't support the storage videos need here — paste a hosted video URL instead.", true);
+                return;
+              }
+              const previousSrc = mediaItem.src;
+              const id = MediaStore.newId();
+              AdminUI.toast('Uploading video…');
+              try {
+                await MediaStore.put(id, file);
+                mediaItem.src = 'idb:' + id;
+                Store.save();
+                if (isIdbRef(previousSrc)) MediaStore.remove(previousSrc.slice(4));
+                AdminUI.toast('Video uploaded.');
+              } catch (err) {
+                AdminUI.toast("Couldn't store that video in this browser (it may be low on disk space) — try a smaller file or paste a hosted URL instead.", true);
+              }
             });
             input.click();
           } else {
@@ -303,8 +397,9 @@
         urlBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           AdminUI.promptMediaUrl((url) => {
+            if (isIdbRef(mediaItem.src)) MediaStore.remove(mediaItem.src.slice(4));
             mediaItem.src = url;
-            if (/\.(mp4|webm|mov|ogg)(\?|$)/i.test(url)) mediaItem.type = 'video';
+            if (videoEmbedInfo(url) || /\.(mp4|webm|mov|ogg)(\?|$)/i.test(url)) mediaItem.type = 'video';
             Store.save();
           });
         });
@@ -334,6 +429,7 @@
         removeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           if (confirm('Remove this media item?')) {
+            if (isIdbRef(mediaItem.src)) MediaStore.remove(mediaItem.src.slice(4));
             section.media.splice(mIdx, 1);
             Store.save();
           }
@@ -388,7 +484,7 @@
     else app.appendChild(addSectionWrap);
   }
 
-  function render() {
+  async function render() {
     const id = getParam('id');
     const projects = Store.getProjects();
     const project = projects.find((p) => p.id === id);
@@ -452,6 +548,7 @@
       </div>
     `;
 
+    await resolveIdbMedia(app);
     initCarousels(app);
     wireAdmin(project, projects, app);
 
