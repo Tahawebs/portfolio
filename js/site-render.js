@@ -40,6 +40,30 @@
     wrap.appendChild(AdminUI.makeAddButton('Add stat', () => {
       profile.stats.push({ value: 'New', label: 'Label' }); Store.save();
     }));
+
+    renderHeroPhoto(profile);
+  }
+
+  function initialsOf(name) {
+    return (name || 'MT').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+  }
+
+  function renderHeroPhoto(profile) {
+    const frame = document.getElementById('hero-photo-frame');
+    if (!frame) return;
+    frame.innerHTML = profile.avatar
+      ? `<img src="${profile.avatar}" alt="${profile.name || 'Profile photo'}">`
+      : `<span class="hero-photo-initials">${initialsOf(profile.name)}</span>`;
+    const editBtn = document.getElementById('hero-photo-edit');
+    if (editBtn) {
+      editBtn.textContent = profile.avatar ? 'Change photo' : 'Add photo';
+      editBtn.onclick = () => {
+        AdminUI.pickImage((dataUrl) => {
+          profile.avatar = dataUrl;
+          Store.save();
+        });
+      };
+    }
   }
 
   function editableInto(id, text, onSave, opts) {

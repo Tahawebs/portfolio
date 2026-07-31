@@ -56,22 +56,12 @@
         <div class="hero-stats" id="hero-stats"></div>
       </div>
 
-      <div class="manifest">
-        <div class="manifest-bar">
-          <span style="background:#E8654E"></span><span style="background:#F5B942"></span><span style="background:#2DD9C6"></span>
-          <span class="name">stack.json</span>
+      <div class="hero-photo reveal in">
+        <div class="hero-photo-glow"></div>
+        <div class="hero-photo-frame" id="hero-photo-frame">
+          <span class="hero-photo-initials" id="hero-photo-initials">MT</span>
         </div>
-        <div class="manifest-body">
-<div class="row"><span class="ln">1</span><span class="p">{</span></div>
-<div class="row"><span class="ln">2</span>  <span class="k">"developer"</span><span class="p">:</span> <span class="s">"Muhammad Taha"</span><span class="p">,</span></div>
-<div class="row"><span class="ln">3</span>  <span class="k">"focus"</span><span class="p">:</span> <span class="s">"Backend Development"</span><span class="p">,</span></div>
-<div class="row"><span class="ln">4</span>  <span class="k">"language"</span><span class="p">:</span> <span class="s">"C#"</span><span class="p">,</span></div>
-<div class="row"><span class="ln">5</span>  <span class="k">"framework"</span><span class="p">:</span> <span class="p">[</span><span class="s">".NET Core"</span><span class="p">,</span> <span class="s">"ASP.NET Core MVC"</span><span class="p">],</span></div>
-<div class="row"><span class="ln">6</span>  <span class="k">"dataAccess"</span><span class="p">:</span> <span class="p">[</span><span class="s">"ADO.NET"</span><span class="p">,</span> <span class="s">"EF Core"</span><span class="p">,</span> <span class="s">"Dapper"</span><span class="p">],</span></div>
-<div class="row"><span class="ln">7</span>  <span class="k">"database"</span><span class="p">:</span> <span class="s">"SQL Server"</span><span class="p">,</span></div>
-<div class="row"><span class="ln">8</span>  <span class="k">"status"</span><span class="p">:</span> <span class="s">"compiling career..."</span></div>
-<div class="row"><span class="ln">9</span><span class="p">}</span></div>
-        </div>
+        <button type="button" class="hero-photo-edit admin-only-visible" id="hero-photo-edit">Change photo</button>
       </div>
     </div>
   </div>
@@ -81,7 +71,7 @@
   <div class="container">
     <div class="about-grid">
       <div>
-        <div class="eyebrow">// about</div>
+        <div class="eyebrow">About</div>
         <h2 class="section-title" id="about-title"></h2>
         <div class="about-copy" id="about-copy" style="margin-top:22px;"></div>
       </div>
@@ -93,7 +83,7 @@
 <section id="skills">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">// skills</div>
+      <div class="eyebrow">Skills</div>
       <h2 class="section-title">Technical skills</h2>
       <p class="section-sub" id="skills-subtitle"></p>
     </div>
@@ -107,7 +97,7 @@
 <section id="projects">
   <div class="container">
     <div class="section-head">
-      <div class="eyebrow">// projects</div>
+      <div class="eyebrow">Projects</div>
       <h2 class="section-title">Featured projects</h2>
       <p class="section-sub">Each project opens onto its own page — process, decisions and a media gallery included. Click through for the full build.</p>
     </div>
@@ -118,7 +108,7 @@
 <section id="contact">
   <div class="container">
     <div class="contact-box reveal">
-      <div class="eyebrow" style="justify-content:center;">// contact</div>
+      <div class="eyebrow" style="justify-content:center;">Contact</div>
       <h2 id="contact-title"></h2>
       <p id="contact-desc"></p>
       <div class="contact-links">
@@ -133,7 +123,7 @@
 <footer>
   <div class="container footer-inner">
     <span>© <span id="year"></span> Muhammad Taha</span>
-    <span>Built with C# on the mind, HTML in the hands.</span>
+    <span>Backend Developer, Karachi</span>
   </div>
 </footer>
 

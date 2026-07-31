@@ -40,6 +40,22 @@
       setOpen(false);
     }
 
+    // "Home" points at index.html, which forces a full reload even when
+    // already on the homepage — unlike the other nav links, which smoothly
+    // scroll to their in-page anchor. Match that behavior when we're
+    // already home.
+    const path = location.pathname;
+    const onHomePage = path.endsWith('index.html') || path === '/' || path.endsWith('/');
+    if (onHomePage && navLinks) {
+      const homeLink = navLinks.querySelector('a[href="index.html"], a[href="./index.html"], a[href="/"]');
+      if (homeLink) {
+        homeLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      }
+    }
+
     // reveal-on-scroll
     const revealEls = document.querySelectorAll('.reveal');
     if ('IntersectionObserver' in window && revealEls.length) {

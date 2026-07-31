@@ -267,7 +267,7 @@ const AdminUI = (function () {
     });
   }
 
-  /* ---------------- Profile popup (click name/logo) ---------------- */
+  /* ---------------- Nav brand (small avatar + name, links home) ---------------- */
   function initialsOf(name) {
     return (name || 'MT').trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   }
@@ -282,55 +282,22 @@ const AdminUI = (function () {
     document.querySelectorAll('#brand-name').forEach((n) => { n.textContent = profile.name || 'Muhammad Taha'; });
   }
 
-  function openProfileModal() {
-    if (document.getElementById('mt-profile-overlay')) {
-      document.getElementById('mt-profile-overlay').classList.add('open');
-      renderProfileModalContent();
-      return;
-    }
-    const wrap = document.createElement('div');
-    wrap.id = 'mt-profile-overlay';
-    wrap.className = 'admin-modal-overlay open';
-    wrap.innerHTML = `<div class="admin-modal profile-modal" role="dialog" aria-label="Profile"><button type="button" class="admin-modal-close" data-close>×</button><div id="mt-profile-body"></div></div>`;
-    document.body.appendChild(wrap);
-    wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.classList.remove('open'); });
-    wrap.querySelector('[data-close]').addEventListener('click', () => wrap.classList.remove('open'));
-    renderProfileModalContent();
-  }
-
-  function renderProfileModalContent() {
-    const body = document.getElementById('mt-profile-body');
-    if (!body) return;
-    const profile = Store.getProfile();
-    body.innerHTML = `
-      <div class="profile-modal-avatar" id="profile-modal-avatar">
-        ${profile.avatar ? `<img src="${profile.avatar}" alt="${profile.name || ''}">` : initialsOf(profile.name)}
-      </div>
-      <div class="profile-modal-name">${profile.name || ''}</div>
-      <div class="profile-modal-role">${profile.heroRole || ''}</div>
-      <p class="profile-modal-bio">${profile.heroDesc || ''}</p>
-      <div class="profile-modal-links">
-        <a class="btn btn-ghost" href="mailto:${profile.contact.email}">Email</a>
-        <a class="btn btn-ghost" href="${profile.contact.linkedin}" target="_blank" rel="noopener">LinkedIn</a>
-      </div>
-      <button type="button" class="profile-modal-avatar-btn admin-only-visible" id="profile-avatar-upload">Change profile photo</button>
-    `;
-    const btn = document.getElementById('profile-avatar-upload');
-    if (btn) {
-      btn.addEventListener('click', () => {
-        pickImage((dataUrl) => {
-          profile.avatar = dataUrl;
-          Store.save();
-        });
-      });
-    }
+  function isHomePage() {
+    const p = location.pathname;
+    return p.endsWith('index.html') || p === '/' || p.endsWith('/');
   }
 
   window.addEventListener('DOMContentLoaded', () => {
     syncBrand();
-    document.querySelectorAll('#brand-btn').forEach((btn) => btn.addEventListener('click', openProfileModal));
+    document.querySelectorAll('#brand-btn').forEach((btn) => btn.addEventListener('click', () => {
+      if (isHomePage()) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.location.href = 'index.html';
+      }
+    }));
   });
-  window.addEventListener(Store.EVENT, () => { syncBrand(); renderProfileModalContent(); });
+  window.addEventListener(Store.EVENT, syncBrand);
 
   function refreshChrome() {
     const loggedIn = Auth.isLoggedIn();

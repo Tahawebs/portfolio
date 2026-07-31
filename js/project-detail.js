@@ -159,7 +159,7 @@
       <section class="pd-section reveal in" data-section="${idx}">
         <div class="container">
           <div class="pd-section-head">
-            <span class="pd-section-num">// section ${String(idx + 1).padStart(2, '0')}</span>
+            <span class="pd-section-num">Section ${String(idx + 1).padStart(2, '0')}</span>
             <h2 class="pd-section-heading" data-field="heading">${escapeHtml(section.heading || '')}</h2>
             <div class="pd-section-sub" data-field="subheading">${escapeHtml(section.subheading || '')}</div>
             <div class="pd-section-desc" data-field="description">
