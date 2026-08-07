@@ -16,6 +16,12 @@
   applyTheme(getPreferredTheme());
 
   window.addEventListener('DOMContentLoaded', () => {
+    const verMeta = document.querySelector('meta[name="app-version"]');
+    const verEl = document.getElementById('footer-version');
+    if (verMeta && verEl && verMeta.content) verEl.textContent = `v${verMeta.content}`;
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
     const toggleBtns = document.querySelectorAll('[data-theme-toggle]');
     toggleBtns.forEach((btn) => {
       btn.addEventListener('click', () => {

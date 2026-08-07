@@ -430,7 +430,8 @@ footer{
   display:flex; justify-content:space-between; align-items:center;
   font-size:13px; color: var(--text-faint); flex-wrap:wrap; gap:10px;
 }
-.footer-inner span{ font-family: var(--font-mono); }
+.footer-inner span{ font-family: var(--font-body); }
+.footer-version{ opacity:.6; font-variant-numeric: tabular-nums; }
 
 /* ================= Responsive ================= */
 @media (max-width: 920px){

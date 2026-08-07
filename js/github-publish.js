@@ -8,6 +8,17 @@
    those platforms need to redeploy — so this button IS the
    deploy step, no terminal or git commands required.
 
+   VERSIONING: every publish also bumps a version number
+   (1.0 → 1.1 → … → 1.10 → 2.0) and rewrites index.html /
+   project.html so the version shows in the footer and every
+   css/js asset link gets a fresh "?v=" query string. That
+   query string is what actually matters for visitors: it's
+   how a browser is told "this isn't the file you cached
+   before, fetch it again." The site's URL never changes —
+   the SAME link always serves the newest published version,
+   which is what makes this different from (and better than)
+   publishing each version at its own separate URL.
+
    REQUIRES a GitHub Personal Access Token, entered once and
    kept in this browser's localStorage. Please read this:
    - Create a **fine-grained** token (github.com/settings/tokens)
@@ -21,8 +32,9 @@
    ========================================================= */
 
 const GitHubPublish = (function () {
-  const CONFIG_KEY = 'mt-github-config'; // { owner, repo, branch, sitePath, projectsPath }
+  const CONFIG_KEY = 'mt-github-config'; // { owner, repo, branch, sitePath, projectsPath, indexPath, projectPath }
   const TOKEN_KEY = 'mt-github-token';
+  const VERSION_KEY = 'mt-site-version'; // { major, minor }
 
   function getConfig() {
     try { return JSON.parse(localStorage.getItem(CONFIG_KEY)) || null; }
@@ -33,8 +45,36 @@ const GitHubPublish = (function () {
   function saveToken(t) { localStorage.setItem(TOKEN_KEY, t); }
   function forgetToken() { localStorage.removeItem(TOKEN_KEY); }
 
+  // Version shown in the footer (e.g. "v1.3") and used to cache-bust
+  // index.html / project.html's asset links on every publish, so a visitor
+  // loading your *same* link always gets the newest CSS/JS instead of a
+  // stale cached copy. Goes 1.0 → 1.1 … → 1.10, then rolls to 2.0.
+  function getVersion() {
+    try {
+      const v = JSON.parse(localStorage.getItem(VERSION_KEY));
+      if (v && typeof v.major === 'number' && typeof v.minor === 'number') return v;
+    } catch (e) { /* fall through */ }
+    return { major: 1, minor: 0 };
+  }
+  function formatVersion(v) { return `${v.major}.${v.minor}`; }
+  function peekNextVersion() {
+    const v = getVersion();
+    let { major, minor } = v;
+    minor += 1;
+    if (minor > 10) { minor = 0; major += 1; }
+    return { major, minor };
+  }
+  function bumpVersion() {
+    const next = peekNextVersion();
+    localStorage.setItem(VERSION_KEY, JSON.stringify(next));
+    return next;
+  }
+
   function b64EncodeUnicode(str) {
     return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode('0x' + p1)));
+  }
+  function b64DecodeUnicode(b64) {
+    return decodeURIComponent(atob(b64).split('').map((c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join(''));
   }
 
   function jsHeader(title, lines) {
@@ -103,6 +143,38 @@ const GitHubPublish = (function () {
     });
   }
 
+  // Rewrites an HTML file's <meta name="app-version"> and every css/js
+  // asset link's "?v=" query string to the new version, straight in the
+  // repo — this is what makes a *returning* visitor on the exact same URL
+  // actually get the new files instead of a cached old copy.
+  async function bumpCacheVersion(cfg, token, path, versionStr, message) {
+    const base = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`;
+    let existing;
+    try {
+      existing = await ghFetch(`${base}?ref=${encodeURIComponent(cfg.branch)}`, token);
+    } catch (e) {
+      return; // file doesn't exist at this path — nothing to version-bump
+    }
+    let html = b64DecodeUnicode(existing.content);
+    html = html.replace(
+      /(<meta\s+name="app-version"\s+content=")[^"]*(")/i,
+      `$1${versionStr}$2`
+    );
+    html = html.replace(
+      /(href|src)="((?:css|js)\/[^"?]+)(?:\?v=[^"]*)?"/g,
+      (_, attr, file) => `${attr}="${file}?v=${versionStr}"`
+    );
+    return ghFetch(base, token, {
+      method: 'PUT',
+      body: JSON.stringify({
+        message,
+        content: b64EncodeUnicode(html),
+        branch: cfg.branch,
+        sha: existing.sha
+      })
+    });
+  }
+
   async function publish() {
     const cfg = getConfig();
     const token = getToken();
@@ -115,8 +187,19 @@ const GitHubPublish = (function () {
     await putFile(cfg, token, cfg.sitePath, siteFile, `Admin panel: update site content (${stamp})`);
     await putFile(cfg, token, cfg.projectsPath, projectsFile, `Admin panel: update projects (${stamp})`);
 
-    return `https://github.com/${cfg.owner}/${cfg.repo}/commits/${cfg.branch}`;
+    const nextVersion = formatVersion(bumpVersion());
+    const versionMsg = `Admin panel: bump to v${nextVersion} (${stamp})`;
+    await bumpCacheVersion(cfg, token, cfg.indexPath || 'index.html', nextVersion, versionMsg);
+    await bumpCacheVersion(cfg, token, cfg.projectPath || 'project.html', nextVersion, versionMsg);
+
+    return {
+      url: `https://github.com/${cfg.owner}/${cfg.repo}/commits/${cfg.branch}`,
+      version: nextVersion
+    };
   }
 
-  return { getConfig, saveConfig, getToken, saveToken, forgetToken, publish };
+  return {
+    getConfig, saveConfig, getToken, saveToken, forgetToken, publish,
+    getVersion, formatVersion, peekNextVersion
+  };
 })();

@@ -164,6 +164,8 @@ const AdminUI = (function () {
     }
     const cfg = GitHubPublish.getConfig() || {};
     const hasToken = !!GitHubPublish.getToken();
+    const currentVersion = GitHubPublish.formatVersion(GitHubPublish.getVersion());
+    const nextVersion = GitHubPublish.formatVersion(GitHubPublish.peekNextVersion());
     const wrap = document.createElement('div');
     wrap.id = 'mt-publish-overlay';
     wrap.className = 'admin-modal-overlay open';
@@ -171,13 +173,15 @@ const AdminUI = (function () {
       <div class="admin-modal" role="dialog" aria-label="Publish to GitHub">
         <button type="button" class="admin-modal-close" data-close>×</button>
         <div class="admin-modal-title">Publish to GitHub</div>
-        <p class="admin-modal-sub">Commits your current edits straight to <code>site-data.js</code> and <code>projects-data.js</code> in your repo. GitHub Pages / Vercel then redeploy on their own — no git commands needed.</p>
+        <p class="admin-modal-sub">Commits your current edits to your repo and bumps the live site from <strong>v${currentVersion}</strong> to <strong>v${nextVersion}</strong>. GitHub Pages / Vercel then redeploy on their own — no git commands needed, and your visitors always get the newest files from the same link.</p>
         <form id="mt-publish-form">
           <label class="admin-field"><span>GitHub username / org</span><input type="text" name="owner" value="${cfg.owner || ''}" placeholder="e.g. muhammad-taha" required></label>
           <label class="admin-field"><span>Repository name</span><input type="text" name="repo" value="${cfg.repo || ''}" placeholder="e.g. portfolio" required></label>
           <label class="admin-field"><span>Branch</span><input type="text" name="branch" value="${cfg.branch || 'main'}" required></label>
           <label class="admin-field"><span>Path to site-data.js</span><input type="text" name="sitePath" value="${cfg.sitePath || 'js/site-data.js'}" required></label>
           <label class="admin-field"><span>Path to projects-data.js</span><input type="text" name="projectsPath" value="${cfg.projectsPath || 'js/projects-data.js'}" required></label>
+          <label class="admin-field"><span>Path to index.html</span><input type="text" name="indexPath" value="${cfg.indexPath || 'index.html'}" required></label>
+          <label class="admin-field"><span>Path to project.html</span><input type="text" name="projectPath" value="${cfg.projectPath || 'project.html'}" required></label>
           <label class="admin-field">
             <span>Personal access token ${hasToken ? '(saved — leave blank to keep it)' : ''}</span>
             <input type="password" name="token" placeholder="${hasToken ? '••••••••••••' : 'github_pat_…'}" autocomplete="off">
@@ -205,7 +209,9 @@ const AdminUI = (function () {
         repo: fd.get('repo').trim(),
         branch: fd.get('branch').trim() || 'main',
         sitePath: fd.get('sitePath').trim(),
-        projectsPath: fd.get('projectsPath').trim()
+        projectsPath: fd.get('projectsPath').trim(),
+        indexPath: fd.get('indexPath').trim() || 'index.html',
+        projectPath: fd.get('projectPath').trim() || 'project.html'
       };
       const tokenInput = fd.get('token').trim();
       GitHubPublish.saveConfig(newCfg);
@@ -217,10 +223,10 @@ const AdminUI = (function () {
       submitBtn.disabled = true;
       submitBtn.textContent = 'Publishing…';
       try {
-        const url = await GitHubPublish.publish();
+        const result = await GitHubPublish.publish();
         wrap.classList.remove('open');
-        toast('Published! Your host should redeploy within a minute or two.');
-        console.log('View the commit:', url);
+        toast(`Published v${result.version}! Your host should redeploy within a minute or two.`);
+        console.log('View the commit:', result.url);
       } catch (err) {
         errEl.textContent = err.message || 'Publish failed.';
       } finally {
